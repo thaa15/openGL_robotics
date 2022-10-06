@@ -113,7 +113,7 @@ void camera_window(){
   glutInitWindowSize(img_width,img_height);
   glutInitWindowPosition(500,100);
   sensorwindow = glutCreateWindow("Camera Process");
-  glClearColor(0.0,0.0,1.0,1.0);
+  glClearColor(0.0f,0.0f,1.0f,1.0f);
   glutDisplayFunc(&display_sensor);
   glutKeyboardFunc(&keyboard);
 }
@@ -132,7 +132,7 @@ void ir_window(){
   glutInitWindowSize(img_width,img_height);
   glutInitWindowPosition(500,200);
   irwindow = glutCreateWindow("Tampak Sensor");
-  glClearColor(0.0,0.0,0.0,1.0);
+  glClearColor(0.0f,0.0f,0.0f,1.0f);
   glutDisplayFunc(&display_ir);
   glutKeyboardFunc(&keyboard);
 }
@@ -141,15 +141,16 @@ void display_sensor(){
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glClearColor(0.0f,0.0f,0.0f,0.0f);
   glMatrixMode(GL_PROJECTION);
-  float floor_x = 0.145+0.005, floor_y = 1,floor_z = 0;
-  float sense_x = 0.145      , sense_y = 1,sense_z = 0.2;
+  glLoadIdentity();
+  float floor_x = 0.145+0.005, floor_y = 0,floor_z = 0;
+  float sense_x = 0.145      , sense_y = 0,sense_z = 0.2;
 
   float floor_x_ = newx(floor_x, floor_y);
   float floor_y_ = newy(floor_x, floor_y);
   float sense_x_ = newx(sense_x, sense_y);
   float sense_y_ = newy(sense_y, sense_y);
 
-  glFrustum(-0.05,0.05,0.01,-0.01,0.19,1);
+  glFrustum(-0.05,0.05,0.01,-0.01,0.2,1);
   gluLookAt(sense_x_,sense_y_,sense_z,floor_x_,floor_y_,floor_z,0.0,0.0,1.0);
 
   glMatrixMode(GL_MODELVIEW);
@@ -410,7 +411,7 @@ void lighting(void){
 
 void disp_robot(){
   glPushMatrix();
-    glTranslatef(rx,ry,0.025);
+    glTranslatef(rx,ry,0.02);
     glRotatef(shi*RTD,0,0,1);
     model_box(0.05,(0.09-0.005)*2,0.01,gray8, gray7, gray6,1);
     glPushMatrix();
@@ -453,7 +454,7 @@ void animate(int k){
     if(sensor==0){q1+=Kp*DTR;dq1=Kp*DTR;q2+=Kp*DTR;dq2=Kp*DTR;}
 
     if(sensor==0||(abs(sensor+oldsensor)<2)){q1+=Kp*DTR;dq1=Kp*DTR;q2+=Kp*DTR;dq2=Kp*DTR;}
-    else{dq1=(float)sensor/30.0*Kp*DTR;q1+=dq1;dq2=-(float)sensor/30.0*Kp*DTR;q2+=dq2;}
+    // else{dq1=(float)sensor/30.0*Kp*DTR;q1+=dq1;dq2=-(float)sensor/30.0*Kp*DTR;q2+=dq2;}
   }
   jacobian(dx,dy,dshi,dq2,dq1,shi);
   dq2=0;dq1=0;
