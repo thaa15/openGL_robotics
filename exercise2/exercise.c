@@ -6,14 +6,20 @@ int main(int argc, char** argv){
 
     obj = gluNewQuadric();
     main_window();
-    textureNumber = loadGLTexture("track.ppm",500,500);
+    textureNumber = loadGLTexture("track2.ppm",500,500);
     camera_backtopwindow();
-    textureNumber = loadGLTexture("track.ppm",500,500);
+    textureNumber = loadGLTexture("track2.ppm",500,500);
     camera_window();
-    textureNumber = loadGLTexture("track.ppm",500,500);
+    textureNumber = loadGLTexture("track2.ppm",500,500);
     ir_window();
 
     glutIdleFunc(&simulation);
     glutMainLoop();
     return 0;
 }
+
+// Sensor terbaca 
+// nilai sensor bener 
+// controller 
+// kp yang paling tepat 
+// advanced controller 

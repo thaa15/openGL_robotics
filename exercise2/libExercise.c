@@ -157,7 +157,7 @@ void display_sensor(){
   glLoadIdentity();
 
   disp_floor(0);
-  disp_robot();
+  // disp_robot();
   lighting();
   glShadeModel(GL_SMOOTH);
   glutSwapBuffers();

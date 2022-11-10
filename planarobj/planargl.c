@@ -39,9 +39,11 @@ GLUquadricObj *obj;
 
 #define Link1 L1
 #define Link2 L2
+#define Link3 L3
 
 float *tetha1=&q1;
 float *tetha2=&q2;
+float *tetha3=&q3;
 
 float *x=&objx;
 float *y=&objy;
@@ -71,13 +73,13 @@ GLfloat gray6[4]  ={0.6, 0.6, 0.6, 1.0};
 GLfloat gray7[4]  ={0.7, 0.7, 0.7, 1.0};
 GLfloat gray8[4]  ={0.8, 0.8, 0.7, 1.0};
 GLfloat gray9[4]  ={0.9, 0.9, 0.7, 1.0};
+GLfloat red[4] = {1.0,0.0,0.0,1.0};
 
 
 void  drawOneLine(double x1, double y1, double x2, double y2) 
    {glBegin(GL_LINES); glVertex3f((x1),(y1),0.0); glVertex3f((x2),(y2),0.0); glEnd();}
    
-void  model_cylinder(GLUquadricObj * object, GLdouble lowerRadius,
-  GLdouble upperRadius, GLdouble length, GLint res, GLfloat *color1, GLfloat *color2)
+void  model_cylinder(GLUquadricObj * object, GLdouble lowerRadius, GLdouble upperRadius, GLdouble length, GLint res, GLfloat *color1, GLfloat *color2)
 {
   glPushMatrix();
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color1);
@@ -172,35 +174,62 @@ void  lighting(void)
 	glEnable(GL_DEPTH_TEST);
 }
 
-void disp_robot(void)
-{
-	
+
+// void  model_cylinder(GLUquadricObj * object, GLdouble lowerRadius, GLdouble upperRadius, GLdouble length, GLint res, GLfloat *color1, GLfloat *color2)
+// void  model_box(GLfloat width, GLfloat depth, GLfloat height, GLfloat *color1, GLfloat *color2, GLfloat *color3, int color)
+
+// #define Xoffset	0.0	
+// #define Yoffset	0.0
+// #define Zoffset	0.3
+// #define L1	0.2   	// link1
+// #define L2	0.15   	// link2
+// #define L3  0.1		//link3
+void disp_robot(void){
   glPushMatrix();
+    // Bentuk bagian bawah box
     model_box(0.3, 0.5, 0.05, gray8, gray7, gray6,1);
     glTranslatef(Xoffset, Yoffset, Zoffset/2);
     // Draw base
     model_cylinder(obj, 0.1, 0.1, Zoffset, 2, blue1, yellow2);
+
     // Menuju joint-1
     glTranslatef(0, 0, Zoffset/2);
+    // Joint-1
     glRotatef(*tetha1*RTD,0,0,1);
+    // Gambar link-1
     glPushMatrix();
-      // Gambar link1-1
-      glRotatef(90,0,1,0);
+      glRotatef(-90,1,0,0);
       glTranslatef(0,0,Link1/2);
       model_cylinder(obj, 0.03, 0.03, Link1, 2, pink6, yellow2);
     glPopMatrix();
+
     // Menuju joint-2
-    glTranslatef(Link1,0,0);
+    glTranslatef(0,Link1, 0);
+    // Joint-2
     glRotatef(*tetha2*RTD,0,0,1);
+    // Gambar link-2
     glPushMatrix();
-      // Gambar link1-1
-      glRotatef(90,0,1,0);
+      glRotatef(-90,1,0,0);
       glTranslatef(0,0,Link2/2);
       model_cylinder(obj, 0.03, 0.03, Link2, 2, yellow5, yellow2);
+
+      glTranslatef(0,0,Link2-Link3/2);
+      glRotatef(-90,0,1,0);
+      glTranslatef(0,0,Link3/2);
+      model_cylinder(obj, 0.03, 0.03, Link3, 2, yellow5, yellow2);
+    glPopMatrix();
+
+    // Menuju joint-3
+    glTranslatef(-Link3,Link2+0.03-0.005,0);
+    glRotatef(-90,0,1,0);
+    glRotatef(*tetha3*RTD,0,0,1);
+    
+    glPushMatrix();
+      // Gambar link-3
+      glTranslatef(0,0,Link3/2);
+      model_cylinder(obj, 0.03, 0.03, Link3, 2, red, red);
     glPopMatrix();
   glPopMatrix();
-
-
 }
 
 // Draw Object
@@ -226,12 +255,9 @@ void Sim_main(void)
 	int Nr=0, Ng=0, Nb=0;
 	static unsigned int Rx,Ry, Gx,Gy, Bx,By; // untuk menyimpan hasil titik berat
 	unsigned int i,j,k;
-  static int count=0;
   glutSetWindow(window);
-  animate(count);
   display();
   // Retrieve_serial();
-  usleep(2000);
   	
 	
 }
@@ -239,11 +265,24 @@ void keyboard(unsigned char key, int i, int j)
 {
 	 switch(key){
       case ESCkey: exit(1); break;
-      case '1': *tetha1+=5*DTR; break;
-      case '2': *tetha2+=3*DTR; break;
-      case '5': *tetha1-=3*DTR;break;
-      case '6': *tetha2-=3*DTR;break;
-      
+      case '1': *tetha1+=3.0*DTR;break;
+      case '2': *tetha2+=3.0*DTR;break;
+      case '3': *tetha3+=3.0*DTR;break;
+      case '4': *tetha1-=3.0*DTR;break;
+      case '5': *tetha2-=3.0*DTR;break;
+      case '6': *tetha3-=3.0*DTR;break;
+      case 'w': glTranslatef(0,-0.1,0); break;
+      case 's': glTranslatef(0,0.1,0); break;
+      case 'a': glTranslatef(0.1,0,0); break;
+      case 'd': glTranslatef(-0.1,0,0); break;
+      case 'q': glTranslatef(0,0,0.1);break;
+      case 'e': glTranslatef(0,0,-0.1); break;
+      case 'j': glRotatef(10,1,0,0); break;
+      case 'J': glRotatef(-10,1,0,0); break;
+      case 'k': glRotatef(10,0,1,0); break;
+      case 'K': glRotatef(-10,0,1,0); break;
+      case 'l': glRotatef(10,0,0,1); break;
+      case 'L': glRotatef(-10,0,0,1); break;
    }
 }
 
@@ -260,8 +299,10 @@ void init(void)
    gluPerspective(60.0, 2, 0.2, 8);
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
-   gluLookAt(0.2, -1.0, 1.5,  0.0, 0.2, 0.2,  0.0, 0.0, 1.0); 
+   gluLookAt(0.3, 0.0, 1.5,  -0.1, 0.0, 0.4,  0.0, 0.0, 1.0); 
 	 lighting();
+   // Mengubah orientasi x ke kanan, y ke kiri dan z ke atas
+    // glRotatef(180,1,1,0);
 	 
    /* When the shading model is GL_FLAT only one colour per polygon is used, 
       whereas when the shading model is set to GL_SMOOTH the colour of 
@@ -282,8 +323,8 @@ int main(int argc, char** argv)
    glutInit (&argc, argv);
    
    // Berikut jika ingin menggunakan serial port
-   //fd = open_port();
-   //init_port(fd);
+  //  fd = open_port();
+  //  init_port(fd);
 
    /* Select type of Display mode:   
       Double buffer 
