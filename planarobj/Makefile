@@ -16,8 +16,8 @@ INC_FILES= $(wildcard *.cpp) $(wildcard *.o)
 
 all: planar
 
-planar: planargl.c
+planar: planargl.c 
 	$(CCGL) $(GL_CFLAGS) $^ $(GL_LIBS) -o $@.o
-	./planar.o
+	./$@.o
 clean:
-	rm -rf *.o
+	rm -rf *.exe

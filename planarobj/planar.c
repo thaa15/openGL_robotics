@@ -4,21 +4,23 @@
 #define DTR 	PI/180.0				   // Conversi degree to radian
 #define RTD 	180.0/PI				   // Conversi degree to radian
 
-#define L1	0.2   	// link1
-#define L2	0.15   	// link2
-#define L3  0.1		//link3
+#define L1	0.3   // link1
+#define L2	0.2   // link2
 
 float q1;
 float q2;
-float q3;
+float ex,ey,x_d,y_d,t,x,y,ddx,ddy,dq1,dq2,ddq1_ref,ddq2_ref,v1,v2,y_cmd,x_cmd;
+float ex_old,ey_old;
 float objx=0.3;
 float objy=0.5;
+float x_init = 0.3, y_init = 0.5;
 
 void init_robot()
 {
 	q1=0.0 * DTR;
 	q2=30.0 * DTR;
-	q3=0.0 *DTR;
+	x_cmd = 0.0;
+	y_cmd = 0.0;
 }
 
 // void Retrieve_serial(void) {
