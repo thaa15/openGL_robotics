@@ -10,17 +10,19 @@
 float q1;
 float q2;
 float ex,ey,x_d,y_d,t,x,y,ddx,ddy,dq1,dq2,ddq1_ref,ddq2_ref,v1,v2,y_cmd,x_cmd;
-float ex_old,ey_old;
+float ex_old,ey_old,integral_x=0,integral_y=0;
 float objx=0.3;
 float objy=0.5;
-float x_init = 0.3, y_init = 0.5;
+float x_init, y_init,cmd_gerak = 0;
 
 void init_robot()
 {
 	q1=0.0 * DTR;
-	q2=30.0 * DTR;
-	x_cmd = 0.0;
-	y_cmd = 0.0;
+	q2=-1.0 * DTR;
+	x_cmd = L1*cos(q1) + L2*cos(q1+q2);
+	y_cmd = L1*sin(q1) + L2*sin(q1+q2);
+	x_init = L1*cos(q1) + L2*cos(q1+q2);
+	y_init = L1*sin(q1) + L2*sin(q1+q2);
 }
 
 // void Retrieve_serial(void) {

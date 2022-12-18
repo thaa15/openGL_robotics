@@ -21,13 +21,13 @@
 #include <sys/time.h>
 #include <time.h>
 #include "planar.c"
-#include "serial.h"
 
 /* ascii code for the escape key */
 #define ESCkey	27
 
 /* The number/handle of our GLUT window */
-int window, wcam;  
+int window, wcam; 
+int linemode = 0; 
  
 
 
@@ -38,17 +38,18 @@ GLUquadricObj *obj;
 #define Xoffset	0.0	
 #define Yoffset	0.0
 #define Zoffset	0.3
-#define waktutraj 1.0
-#define k 0.4
+#define waktutraj 5.0
+#define k 12
 #define kp 4.0
-#define kd 4.0
+#define kd 2.3
+#define ki 3.3
 
 #define Link1 L1
 #define Link2 L2
 
 float *tetha1=&q1;
 float *tetha2=&q2;
-float current_time,dt=0.001;
+float current_time,dt=0.02;
 
 char debug=0;
 
@@ -256,39 +257,41 @@ void display(void)
 // }
 
 void forward_kinematic(float *x1,float *y1, float q1, float q2){
-  *x1 = Link1*cos(q1) + Link2*cos(q1+q2);
-  *y1 = Link1*sin(q1) + Link2*sin(q1+q2);
+  *x1 = Link1*cos(q1*1.0) + Link2*cos((q1+q2)*1.0);
+  *y1 = Link1*sin(q1*1.0) + Link2*sin((q1+q2)*1.0);
 }
 
-void trajectory_line(float t){
-  if(t<=0.01){
-    x_init = x; y_init = y;
-    // x_cmd = x + 0.3;y_cmd = y - 0.2;
-  }
-  if(t < waktutraj){
-    x_d = (x_cmd-x_init)*t/waktutraj + x_init;
-    y_d = (y_cmd-y_init)*t/waktutraj + y_init;
+void trajectory_line(float t1){
+  if(t <= waktutraj){
+    x_d = (x_cmd-x_init)*t1/waktutraj + x_init;
+    y_d = (y_cmd-y_init)*t1/waktutraj + y_init;
   }
 }
 
-void hitungPDController(float *ddxRef, float*ddyRef,float erx, float ery,float erx_old, float ery_old){
-  *ddxRef = kp*erx + kd*(erx - erx_old)/dt;
-  *ddyRef = kp*ery + kd*(ery - ery_old)/dt;
+void hitungPIDController(float *ddxRef, float*ddyRef,float erx, float ery,float erx_old, float ery_old){
+  integral_x += (erx - erx_old)*dt;
+  integral_y += (ery - ery_old)*dt;
+  *ddxRef = kp*erx + kd*(erx - erx_old)/dt + ki*integral_x;
+  *ddyRef = kp*ery + kd*(ery - ery_old)/dt + ki*integral_y;
 }
 
 void inverse_jacobian(float*ddq1_ref,float*ddq2_ref,float ddx,float ddy,float q1,float q2){
-  *ddq1_ref = (Link2*cos(q1+q2)*ddx + Link2*sin(q1+q2)*ddy)/(Link1*Link2*sin(q2));
-  *ddq2_ref = -(Link1*cos(q1) + Link2*cos(q1+q2))*ddx - ((Link1*sin(q1) + Link2*sin(q1+q2))*ddy)/(Link1*Link2*sin(q2));
+  static double den;
+  den = Link2*sin((q1 + q2)*1.0)*(Link2*cos((q1 + q2)*1.0) + Link1*cos(q1*1.0)) - Link2*cos((q1 + q2)*1.0)*(Link2*sin((q1 + q2)*1.0) + Link1*sin(q1*1.0));
+  // den = Link1*Link2*sin(q2);
+  
+  *ddq1_ref = (Link2*cos((q1+q2)*1.0)*ddx + Link2*sin((q1+q2)*1.0)*ddy)/(den);
+  *ddq2_ref = -(Link1*cos(q1*1.0) + Link2*cos((q1+q2)*1.0))*ddx - ((Link1*sin(q1*1.0) + Link2*sin((q1+q2)*1.0))*ddy)/(den);
+  // printf("c11:%.2f c12:%.2f -x:%.2f -y:%.2f den:%.2f\n",Link2*cos((q1+q2)*1.0)*ddx,Link2*sin((q1+q2)*1.0)*ddy,-(Link1*cos(q1*1.0) + Link2*cos((q1+q2)*1.0))*ddx,-((Link1*sin(q1*1.0) + Link2*sin((q1+q2)*1.0))*ddy,den));
 }
 
 void control_robot(){
   static int i=0;
-  // dt = (double)((clock() - current_time)/1000000);
-  if(t < waktutraj){
+  if(cmd_gerak){
   forward_kinematic(&x,&y,q1,q2);
   trajectory_line(waktutraj*(t/waktutraj - trunc(t/waktutraj)));
   ex = x_d - x; ey = y_d - y;
-  hitungPDController(&ddx, &ddy, ex, ey,ex_old,ey_old);
+  hitungPIDController(&ddx, &ddy, ex, ey,ex_old,ey_old);
   inverse_jacobian(&ddq1_ref,&ddq2_ref, ddx, ddy, q1, q2);
   v1 = k*ddq1_ref;v2 = k*ddq2_ref;
 
@@ -300,11 +303,11 @@ void control_robot(){
   *tetha2 = q2;
   t += dt;
   if(i%10 == 0)
-    printf("t:%.2f q1:%.2f q2:%.2f x:%.2f y:%.2f cmdx %.2f cmdy:%.2f x_d:%.2f y_d:%.2f\n",t,q1*RTD,q2*RTD,x,y,x_cmd,y_cmd,x_d,y_d);
+    printf("%.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n",t,x_cmd,y_cmd,x,y,ddx,ddy,ddq1_ref*RTD,ddq2_ref*RTD,q1*RTD,q2*RTD);
   ex_old = ex;
   ey_old = ey;
-  // current_time = clock();
   i++;
+  usleep(dt *1000000);
   }
 }
 
@@ -327,9 +330,15 @@ void keyboard(unsigned char key, int i, int j)
 	 switch(key){
       case ESCkey: exit(1); break;
       case '1':
-        x_cmd = 0.16;y_cmd = 0.22; break;
+        cmd_gerak = 1;
+        x_cmd = L1*cos(60*DTR) + L2*cos((60-30)*DTR);
+        y_cmd = L1*sin(60*DTR) + L2*sin((60-30)*DTR);
+        break;
       case '2':
-        x_cmd -= 3.0;y_cmd -= 3.0; break;
+        cmd_gerak = 1;
+        x_cmd = L1*cos(120*DTR) + L2*cos((120+10)*DTR);
+        y_cmd = L1*sin(120*DTR) + L2*sin((120+10)*DTR);
+        break;
    }
 }
 
@@ -383,7 +392,7 @@ int main(int argc, char** argv)
    glutInitWindowPosition (40, 100);
 
    /* Open a window */  
-   window = glutCreateWindow ("Simple Window");
+   window = glutCreateWindow ("Thariq Hadyan");
 
    /* Initialize our window. */
    init() ;
